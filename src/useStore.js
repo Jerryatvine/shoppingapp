@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { supabase } from './supabase';
+import { supabase, missingConfig } from './supabase';
 
 export function useStore() {
   const [items, setItems]     = useState([]);
@@ -8,6 +8,7 @@ export function useStore() {
 
   // ── Fetch all items with nested purchases ─────────────────────────────
   const fetchItems = useCallback(async () => {
+    if (missingConfig) { setLoading(false); return; }
     setLoading(true);
     setError(null);
     const { data, error: err } = await supabase

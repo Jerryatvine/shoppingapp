@@ -427,6 +427,26 @@ body {
   margin-top: 4px;
 }
 
+/* ── Config Error ─────────────────────────────────────── */
+.config-error {
+  text-align: center;
+  padding: 80px 24px;
+  color: var(--text-sub);
+  max-width: 480px;
+  margin: 0 auto;
+}
+.config-error-icon { font-size: 48px; margin-bottom: 16px; }
+.config-error h2   { font-size: 20px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
+.config-error p    { font-size: 14px; margin-bottom: 8px; }
+.config-error-sub  { font-size: 13px; }
+.config-error code {
+  background: var(--border);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 12px;
+}
+
 /* ── Loading State ────────────────────────────────────── */
 .loading-state {
   display: flex;

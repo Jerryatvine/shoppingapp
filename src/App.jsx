@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useStore } from './useStore';
+import { missingConfig } from './supabase';
 import ItemCard from './components/ItemCard';
 import AddItemModal from './components/AddItemModal';
 import AddPurchaseModal from './components/AddPurchaseModal';
@@ -38,6 +39,22 @@ export default function App() {
     }
     return list;
   }, [items, search, filterType, sortBy]);
+
+  if (missingConfig) {
+    return (
+      <div className="app">
+        <div className="config-error">
+          <p className="config-error-icon">⚙️</p>
+          <h2>Missing Configuration</h2>
+          <p>The Supabase environment variables are not set.</p>
+          <p className="config-error-sub">
+            Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to your
+            Vercel project's Environment Variables, then redeploy.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="app">
