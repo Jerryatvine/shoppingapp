@@ -1,6 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase, missingConfig } from './supabase';
 
+// ── Shape helpers: JS (camelCase) ↔ DB (snake_case) ───────────────────────
+function dbItemToJs(item) {
+  return {
+    ...item,
+    defaultUnit: item.default_unit,
+    purchases: (item.purchases || []).sort(
+      (a, b) => new Date(a.date) - new Date(b.date)
+    ),
+  };
+}
+
+function jsItemToDB({ id, purchases, defaultUnit, ...rest }) {
+  return { ...rest, default_unit: defaultUnit };
+}
+
 export function useStore() {
   const [items, setItems]     = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,13 +34,8 @@ export function useStore() {
     if (err) {
       setError(err.message);
     } else {
-      // Sort purchases oldest → newest inside each item
-      const sorted = (data || []).map(item => ({
-        ...item,
-        purchases: (item.purchases || []).sort(
-          (a, b) => new Date(a.date) - new Date(b.date)
-        ),
-      }));
+      // Normalize snake_case DB columns → camelCase, sort purchases oldest→newest
+      const sorted = (data || []).map(dbItemToJs);
       setItems(sorted);
     }
     setLoading(false);
@@ -35,15 +45,14 @@ export function useStore() {
 
   // ── Items ──────────────────────────────────────────────────────────────
   async function addItem(item) {
-    const { id, purchases, ...rest } = item; // strip client-generated id/purchases
     const { data, error: err } = await supabase
       .from('items')
-      .insert([{ ...rest }])
+      .insert([jsItemToDB(item)])
       .select('*, purchases(*)')
       .single();
 
     if (err) { setError(err.message); return; }
-    setItems(prev => [...prev, { ...data, purchases: [] }]
+    setItems(prev => [...prev, dbItemToJs(data)]
       .sort((a, b) => a.name.localeCompare(b.name)));
   }
 
