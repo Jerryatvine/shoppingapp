@@ -2,13 +2,21 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase, missingConfig } from './supabase';
 
 // ── Shape helpers: JS (camelCase) ↔ DB (snake_case) ───────────────────────
+function dbPurchaseToJs({ total_price, price_per_base, item_id, ...rest }) {
+  return { ...rest, totalPrice: total_price, pricePerBase: price_per_base, itemId: item_id };
+}
+
+function jsPurchaseToDB({ id, totalPrice, pricePerBase, ...rest }) {
+  return { ...rest, total_price: totalPrice, price_per_base: pricePerBase };
+}
+
 function dbItemToJs(item) {
   return {
     ...item,
     defaultUnit: item.default_unit,
-    purchases: (item.purchases || []).sort(
-      (a, b) => new Date(a.date) - new Date(b.date)
-    ),
+    purchases: (item.purchases || [])
+      .map(dbPurchaseToJs)
+      .sort((a, b) => new Date(a.date) - new Date(b.date)),
   };
 }
 
@@ -68,19 +76,19 @@ export function useStore() {
 
   // ── Purchases ──────────────────────────────────────────────────────────
   async function addPurchase(itemId, purchase) {
-    const { id, ...rest } = purchase; // strip client-generated id
     const { data, error: err } = await supabase
       .from('purchases')
-      .insert([{ item_id: itemId, ...rest }])
+      .insert([{ item_id: itemId, ...jsPurchaseToDB(purchase) }])
       .select()
       .single();
 
     if (err) { setError(err.message); return; }
+    const normalized = dbPurchaseToJs(data);
     setItems(prev => prev.map(item =>
       item.id === itemId
         ? {
             ...item,
-            purchases: [...item.purchases, data].sort(
+            purchases: [...item.purchases, normalized].sort(
               (a, b) => new Date(a.date) - new Date(b.date)
             ),
           }
